@@ -1,0 +1,33 @@
+# Runtime data
+outputs/portable-data/
+outputs/test-artifacts/
+*.log
+
+# User/local config
+config.json
+outputs/config.json
+
+# Generated or temporary launch/build artifacts
+outputs/SnipSaverSettingsLauncher.*
+outputs/Run-SnipSaver-Settings.cmd
+outputs/AutoSave-SnipsToJpg.*
+outputs/Install-AutoSave-SnipsToJpg.ps1
+outputs/Uninstall-AutoSave-SnipsToJpg.ps1
+outputs/Run-AutoSave-SnipsToJpg.cmd
+outputs/Icon-Preview-Index.html
+outputs/icon-previews/lens-badge.svg
+outputs/icon-previews/sharp-minimal.svg
+outputs/icon-previews/warm-utility.svg
+dist/payload/
+dist/*.cs
+
+# OS/editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
+
+# PowerShell transient files
+*.tmp
+*.bak
