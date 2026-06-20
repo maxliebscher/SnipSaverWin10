@@ -1,0 +1,61 @@
+name: Build SnipSaverWin10 release artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Windows 10 installer and portable EXEs
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore runtime payload
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path outputs -Force | Out-Null
+          $payloadBase64 = Get-Content -LiteralPath release-source\SnipSaverWin10-runtime-payload.zip.b64 -Raw
+          $payloadZip = Join-Path $env:RUNNER_TEMP 'SnipSaverWin10-runtime-payload.zip'
+          [IO.File]::WriteAllBytes($payloadZip, [Convert]::FromBase64String($payloadBase64.Trim()))
+          Expand-Archive -LiteralPath $payloadZip -DestinationPath outputs -Force
+
+      - name: Build release artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Build-ReleaseArtifacts.ps1
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SnipSaverWin10-v0.5.8
+          if-no-files-found: error
+          path: |
+            dist/SnipSaverWin10-Installer.exe
+            dist/SnipSaverWin10-Portable.exe
+            dist/SnipSaverWin10-payload.zip
+
+      - name: Create GitHub release for tags
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release create $env:GITHUB_REF_NAME `
+            dist/SnipSaverWin10-Installer.exe `
+            dist/SnipSaverWin10-Portable.exe `
+            dist/SnipSaverWin10-payload.zip `
+            --title "SnipSaverWin10 $env:GITHUB_REF_NAME" `
+            --notes-file RELEASE_ARTIFACT.md
