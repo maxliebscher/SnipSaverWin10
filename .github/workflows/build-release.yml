@@ -25,7 +25,11 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Path outputs -Force | Out-Null
-          $payloadBase64 = Get-Content -LiteralPath release-source\SnipSaverWin10-runtime-payload.zip.b64 -Raw
+          $payloadParts = Get-ChildItem -LiteralPath release-source -Filter 'SnipSaverWin10-runtime-payload.zip.b64.*' | Sort-Object Name
+          if (-not $payloadParts) {
+            throw 'Missing runtime payload parts in release-source.'
+          }
+          $payloadBase64 = ($payloadParts | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join ''
           $payloadZip = Join-Path $env:RUNNER_TEMP 'SnipSaverWin10-runtime-payload.zip'
           [IO.File]::WriteAllBytes($payloadZip, [Convert]::FromBase64String($payloadBase64.Trim()))
           Expand-Archive -LiteralPath $payloadZip -DestinationPath outputs -Force
